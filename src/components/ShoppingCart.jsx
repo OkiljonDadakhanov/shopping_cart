@@ -48,7 +48,7 @@ const ShoppingCart = () => {
       date: new Date().toISOString(),
     };
     await addOrder(order);
-    alert(' Success!');
+    alert('Success!');
   };
 
   return (

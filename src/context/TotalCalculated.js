@@ -8,6 +8,7 @@ export const useTotal = () => useContext(TotalCalculated);
 export const TotalProvider = ({ children }) => {
     const [subtotal, setSubtotal] = useState(0);
     const [shipping, setShipping] = useState(0);
+    
 
     useEffect(() => {
         const fetchCartData = async () => {
