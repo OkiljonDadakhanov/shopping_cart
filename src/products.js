@@ -14,12 +14,14 @@ export const products = [
     id: 2,
     name: 'Combo Plate',
     description: 'Extra cheese and toping',
-    price: 45
+    price: 45,
+    image: productImage2,
   },
   {
     id: 3,
     name: 'Spanish Rice',
     description: 'Extra garllic',
-    price: 20
+    price: 20,
+    image: productImage3,
   }
 ];
