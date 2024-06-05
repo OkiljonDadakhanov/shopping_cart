@@ -1,35 +1,54 @@
-import top from "../assets/top.png";
-import bottom from "../assets/bottom.png";
-import removeFood from "../assets/delete.png";
-
-import { products } from "../products";
-import { useState } from "react";
-import CardDetails from "./CardDetails";
+import React, { useState, useEffect } from 'react';
+import CartItem from './CartItem';
+import CardDetails from './CardDetails';
+import { getCartItems, calculateTotal, addOrder } from '../products';
 
 const ShoppingCart = () => {
-  const [quantities, setQuantities] = useState(products.map(() => 1));
-  const [totalPrice, setTotalPrice] = useState(
-    products.reduce((total, product) => total + product.price, 0)
-  );
-  const [cartItems, setCartItems] = useState(products);
+  const [cartItems, setCartItems] = useState([]);
+  const [quantities, setQuantities] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
 
-  const handleQuantityChange = (index, delta) => {
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      const items = await getCartItems();
+      setCartItems(items);
+      setQuantities(items.map(() => 1));
+      const { total } = calculateTotal(items);
+      setTotalPrice(total);
+    };
+
+    fetchCartItems();
+  }, []);
+
+  const handleQuantityChange = (id, delta) => {
+    const index = cartItems.findIndex(item => item.id === id);
     const newQuantity = Math.max(quantities[index] + delta, 1);
-    setQuantities((prevQuantities) => {
+    setQuantities(prevQuantities => {
       const newQuantities = [...prevQuantities];
       newQuantities[index] = newQuantity;
       return newQuantities;
     });
 
-    setTotalPrice((prevTotalPrice) => {
-      return prevTotalPrice + (newQuantity - quantities[index]) * products[index].price;
+    setTotalPrice(prevTotalPrice => {
+      return prevTotalPrice + (newQuantity - quantities[index]) * cartItems[index].price;
     });
   };
 
-  const handleRemoveItem = (index) => {
-    setCartItems((prevCartItems) => prevCartItems.filter((_, i) => i !== index));
-    setQuantities((prevQuantities) => prevQuantities.filter((_, i) => i !== index));
-    setTotalPrice((prevTotalPrice) => prevTotalPrice - products[index].price * quantities[index]);
+  const handleRemoveItem = (id) => {
+    const index = cartItems.findIndex(item => item.id === id);
+    setCartItems(prevCartItems => prevCartItems.filter((_, i) => i !== index));
+    setQuantities(prevQuantities => prevQuantities.filter((_, i) => i !== index));
+    setTotalPrice(prevTotalPrice => prevTotalPrice - cartItems[index].price * quantities[index]);
+  };
+
+  const handleCheckout = async () => {
+    const order = {
+      items: cartItems,
+      total: totalPrice,
+      date: new Date().toISOString(),
+    };
+    await addOrder(order);
+    alert(' Success!');
   };
 
   return (
@@ -41,47 +60,13 @@ const ShoppingCart = () => {
             <p className="text-gray-500 mb-4">You have {cartItems.length} items in your cart</p>
             <div className="space-y-4">
               {cartItems.map((product, index) => (
-                <div
+                <CartItem
                   key={product.id}
-                  className="flex items-center bg-white shadow-md rounded-lg p-4"
-                >
-                  <div className="w-24 h-24 flex-shrink-0">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold">{product.name}</h3>
-                        <p className="text-gray-500">{product.description}</p>
-                      </div>
-                      <div className="flex items-center gap-5">
-                        <button
-                          onClick={() => handleQuantityChange(index, 1)}
-                          className="bg-gray-200 p-1 rounded"
-                        >
-                          <img src={top} alt="" className="w-4 h-4" />
-                        </button>
-                        <span className="text-gray-700">{quantities[index]}</span>
-                        <button
-                          onClick={() => handleQuantityChange(index, -1)}
-                          className="bg-gray-200 p-1 rounded"
-                        >
-                          <img src={bottom} alt="" className="w-4 h-4" />
-                        </button>
-                        <p className="text-gray-700 font-bold">
-                          ${product.price * quantities[index]}
-                        </p>
-                        <button onClick={() => handleRemoveItem(index)} className="cursor-pointer">
-                          <img src={removeFood} alt="" className="w-6 h-6" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  item={product}
+                  quantity={quantities[index]}
+                  onQuantityChange={handleQuantityChange}
+                  onRemove={handleRemoveItem}
+                />
               ))}
             </div>
             <div className="mt-4 text-right">
@@ -93,7 +78,13 @@ const ShoppingCart = () => {
         )}
       </div>
       <div className="w-1/2 bg-gray-100 p-8">
-       <CardDetails />
+        <CardDetails />
+        <button
+          onClick={handleCheckout}
+          className="bg-green-500 text-white px-4 py-2 rounded mt-4"
+        >
+          Checkout
+        </button>
       </div>
     </div>
   );

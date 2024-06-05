@@ -1,11 +1,12 @@
-import ShoppingCart from './components/ShoppingCart';
+import React from 'react';
+import CheckoutPage from './components/CheckOutPage';
 
-function App() {
+const App = () => {
   return (
     <div className="App">
-    <ShoppingCart />
+        <CheckoutPage />
     </div>
   );
-}
+};
 
 export default App;
